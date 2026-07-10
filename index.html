@@ -2555,16 +2555,21 @@ main#app{max-width:var(--maxw);margin:0 auto;padding:var(--sp-4) var(--sp-4) var
 .btn.copied,.btn.opened{border-color:var(--success);color:var(--success)}
 .btn-row{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-3)}
 
-/* ============ LP ヒーロー ============ */
-.hero{background:var(--grad-hero);border-radius:var(--radius-lg);padding:var(--sp-6) var(--sp-5);color:#fff;text-align:center}
-.hero h1{color:#fff}
-.hero-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;color:rgba(255,255,255,.92);margin-bottom:var(--sp-2)}
-.hero .tagline{margin-top:var(--sp-3);font-weight:700;font-size:14px;color:#fff}
+/* ============ LP ヒーロー（診断オンリー・没入型） ============ */
+.hero{position:relative;overflow:hidden;isolation:isolate;background:var(--grad-hero);border-radius:var(--radius-lg);padding:var(--sp-6) var(--sp-5);color:#fff;text-align:center;min-height:clamp(400px,66vh,560px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hero h1{color:#fff;font-size:clamp(23px,6vw,30px);line-height:1.45;letter-spacing:.01em}
+.hero-eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;color:rgba(255,255,255,.94);margin-bottom:var(--sp-2)}
+.hero .tagline{margin-top:var(--sp-3);font-weight:700;font-size:13.5px;line-height:1.7;color:#fff;max-width:30em}
+.hero-hint{margin-top:var(--sp-3);font-size:11.5px;color:rgba(255,255,255,.85)}
+/* オーロラ・オーブ（CSSのみ・reduced-motionで静止。z-index:-1でグラデ背景の上・文字の下） */
+.hero-orb{position:absolute;border-radius:50%;z-index:-1;pointer-events:none;filter:blur(34px);opacity:.78;mix-blend-mode:screen}
+.hero-orb.o1{width:320px;height:320px;background:radial-gradient(circle at 35% 35%,#FFDDEB 0%,#FF9EC6 42%,rgba(255,158,198,0) 70%);top:-78px;left:-58px;animation:orbA 15s ease-in-out infinite}
+.hero-orb.o2{width:280px;height:280px;background:radial-gradient(circle at 60% 40%,#E4DBFF 0%,#A98CFF 44%,rgba(169,140,255,0) 70%);bottom:-90px;right:-48px;animation:orbB 19s ease-in-out infinite}
+.hero-orb.o3{width:230px;height:230px;background:radial-gradient(circle at 50% 50%,#CFF4FF 0%,#7FDBFF 46%,rgba(127,219,255,0) 72%);top:34%;left:57%;animation:orbC 17s ease-in-out infinite}
 .chip-row{display:flex;flex-wrap:wrap;gap:var(--sp-2);justify-content:center;margin-top:var(--sp-4)}
 .chip{display:inline-flex;align-items:center;background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.6);color:#2A2170;font-size:12px;font-weight:700;border-radius:var(--radius-full);padding:4px 12px;min-height:28px}
-.hero-cta{margin-top:var(--sp-5);width:100%;max-width:340px;background:#fff;color:#2A2170;border:0;font-weight:800}
-.hero-cta:hover{background:#fff;filter:brightness(.96)}
-.hero-again{color:#fff;text-decoration:underline;margin-top:var(--sp-3);display:inline-flex;align-items:center;min-height:44px;font-weight:700}
+.hero-cta{margin-top:var(--sp-5);width:100%;max-width:340px;background:#fff;color:#2A2170;border:0;font-weight:800;box-shadow:0 10px 30px rgba(18,10,55,.22);animation:ctaGlow 2.8s ease-in-out infinite}
+.hero-cta:hover{background:#fff;filter:brightness(.97)}
 .biz-grid{display:grid;grid-template-columns:1fr;gap:var(--sp-2)}
 @media(min-width:520px){.biz-grid{grid-template-columns:1fr 1fr}}
 .biz-chip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--sp-3) var(--sp-4);text-align:left;min-height:44px}
@@ -2620,6 +2625,11 @@ main#app{max-width:var(--maxw);margin:0 auto;padding:var(--sp-4) var(--sp-4) var
   .type-name{font-size:23px}
   .pct-big{font-size:34px}
 }
+/* デスクトップ幅では4:5固定を解いて内容ベースの高さにし、ブロック間の大きな空白を詰める。
+   モバイル（<520px）はスクショ自己完結の4:5を維持 */
+@media(min-width:520px){
+  .result-card{aspect-ratio:auto;justify-content:flex-start;gap:var(--sp-5);padding:var(--sp-6) var(--sp-5)}
+}
 .tier-badge{display:inline-block;background:var(--accent-soft);color:var(--accent-text);font-weight:800;font-size:12px;border-radius:var(--radius-full);padding:4px 14px}
 .top3{display:flex;flex-direction:column;gap:var(--sp-2);text-align:left}
 .bar-row{display:flex;flex-direction:column;gap:2px}
@@ -2638,14 +2648,41 @@ main#app{max-width:var(--maxw);margin:0 auto;padding:var(--sp-4) var(--sp-4) var
 @media(min-width:560px){.runner-cards{grid-template-columns:1fr 1fr}}
 .runner-card{text-align:left;display:block}
 .runner-card:hover{border-color:var(--accent-ring)}
+/* この3つの提案（1位=大カード / 2位3位=中カード。3つ同格・1位は最推し表示） */
+.proposals{display:flex;flex-direction:column;gap:var(--sp-3)}
+.propose-1{border-radius:var(--radius-lg);padding:var(--sp-5);border:1px solid transparent;background:linear-gradient(var(--surface),var(--surface)) padding-box,var(--grad-hero) border-box}
+.propose-badge{display:inline-flex;align-items:center;background:var(--grad-hero);color:#fff;font-weight:800;font-size:12px;border-radius:var(--radius-full);padding:4px 14px}
+.propose-name{font-size:20px;font-weight:800;line-height:1.4;margin-top:var(--sp-3)}
+.propose-meta{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2)}
+.propose-pct{font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent-text)}
+.propose-catch{margin-top:var(--sp-2)}
+.propose-reason-lead{margin-top:var(--sp-3)}
+.propose-reason{margin-top:var(--sp-1)}
+.propose-1 .btn{margin-top:var(--sp-4)}
+.propose-rest{display:grid;grid-template-columns:1fr;gap:var(--sp-3)}
+@media(min-width:520px){.propose-rest{grid-template-columns:1fr 1fr}}
+.propose-mid{display:flex;flex-direction:column;gap:4px;text-align:left}
+.propose-rank{font-size:12px;font-weight:800;color:var(--text-3)}
+.propose-name-sm{font-weight:800;font-size:15px}
+.mid-link{margin-top:var(--sp-2);font-weight:700;color:var(--accent-text)}
 .rank-all{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
 .rank-all summary{cursor:pointer;min-height:52px;display:flex;align-items:center;padding:var(--sp-2) var(--sp-4);font-weight:700;list-style:none}
 .rank-all summary::-webkit-details-marker{display:none}
 .rank-list{border-top:1px solid var(--border);padding:var(--sp-2) var(--sp-3) var(--sp-3)}
-.rank-row{display:flex;align-items:center;gap:var(--sp-3);width:100%;min-height:44px;text-align:left;border-radius:var(--radius-sm);padding:4px var(--sp-2)}
+.rank-row{display:flex;align-items:center;gap:var(--sp-2);width:100%;min-height:48px;text-align:left;border-radius:var(--radius-sm);padding:6px var(--sp-2)}
 .rank-row:hover{background:var(--accent-soft)}
-.rank-no{font-weight:800;font-variant-numeric:tabular-nums;color:var(--text-3);min-width:20px}
-.rank-name{flex:1;font-weight:700}
+.rank-no{font-weight:800;font-variant-numeric:tabular-nums;color:var(--text-3);min-width:20px;flex:none}
+.rank-name{flex:0 0 auto;max-width:42%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.rank-bar{flex:1;height:8px;background:var(--elevated);border-radius:var(--radius-full);overflow:hidden;min-width:40px}
+.rank-bar-fill{display:block;height:100%;background:var(--grad-hero);border-radius:var(--radius-full)}
+.rank-pct{flex:none}
+/* 最狭幅では副業名を省略せず全文表示: 1行目=番号+名称(折り返し可)+%、2行目=バー全幅 */
+@media(max-width:439.98px){
+  .rank-row{flex-wrap:wrap;row-gap:6px}
+  .rank-name{flex:1 1 auto;max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
+  .rank-pct{order:3}
+  .rank-bar{order:4;flex:1 1 100%;min-width:0}
+}
 
 /* ============ 実践ページ（biz / list・無彩色基調） ============ */
 .crumbs{margin-bottom:var(--sp-2)}
@@ -2702,6 +2739,11 @@ details.qa-item summary::-webkit-details-marker{display:none}
 @keyframes slideIn{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
 .fade-up{animation:fadeUp .45s ease both}
 .q-enter{animation:slideIn .3s ease both}
+/* オーロラ・オーブの漂い / CTAのやわらかな発光（reduced-motionで無効＝静止） */
+@keyframes orbA{0%,100%{transform:translate(0,0)}50%{transform:translate(28px,24px)}}
+@keyframes orbB{0%,100%{transform:translate(0,0)}50%{transform:translate(-24px,-28px)}}
+@keyframes orbC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20px,22px) scale(1.08)}}
+@keyframes ctaGlow{0%,100%{box-shadow:0 10px 30px rgba(18,10,55,.22),0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 12px 34px rgba(18,10,55,.26),0 0 24px 6px rgba(255,255,255,.26)}}
 
 /* ============ reduced motion（全アニメ無効） ============ */
 @media (prefers-reduced-motion: reduce){
@@ -3038,54 +3080,50 @@ details.qa-item summary::-webkit-details-marker{display:none}
   /* ---------- LP（#/） ---------- */
   function renderHome(){
     app.textContent = "";
+    /* LP は「診断ツール」であることだけ。副業名・手法の詳細はここには一切出さない
+       （結果ページで初めて提示する）。ファーストビュー完結・没入型ヒーロー */
     var hero = el("section","hero fade-up");
-    hero.appendChild(el("p","hero-eyebrow","5つの質問に答えるだけ"));
-    hero.appendChild(el("h1",null, DATA.appName || ""));
-    hero.appendChild(el("p","tagline", DATA.tagline || ""));
+
+    /* オーロラ・オーブ（装飾・aria-hidden。CSSアニメでゆっくり漂う／reduced-motionで静止） */
+    ["o1","o2","o3"].forEach(function(o){
+      var orb = el("span","hero-orb "+o);
+      orb.setAttribute("aria-hidden","true");
+      hero.appendChild(orb);
+    });
+
+    hero.appendChild(el("p","hero-eyebrow","AI副業診断"));
+    hero.appendChild(el("h1",null,"あなたに向いているAI副業、なんだと思う？"));
+    hero.appendChild(el("p","tagline","5つの質問で、全40タイプからあなたの副業タイプを判定します。"));
+
     var chips = el("div","chip-row");
-    ["3分で診断","APIキー不要","オフラインで動く"].forEach(function(t){ chips.appendChild(el("span","chip",t)); });
+    ["所要 約3分","登録不要・無料","結果はその場で"].forEach(function(t){ chips.appendChild(el("span","chip",t)); });
     hero.appendChild(chips);
+
     /* 全問回答済みの再訪で「はじめる」を押すと質問5/5（前回の回答選択済み）に着地して
        文言と食い違うため、ラベルを切り替え、結果ページの「もう一度診断する」と同じ
        リセット挙動（answers/result削除→質問1から）に揃える */
     var answeredAll = answersComplete(getAnswers());
-    var cta = el("button","btn btn-primary hero-cta", answeredAll ? "もう一度診断する（全5問）" : "診断をはじめる（全5問）");
+    var cta = el("button","btn btn-primary hero-cta", answeredAll ? "もう一度診断する" : "診断をはじめる");
     cta.type = "button";
     cta.addEventListener("click", function(){
       if(answeredAll){ lsRemove("answers"); lsRemove("result"); quizIdx = 0; }  /* theme / profile / step は残す */
       location.hash = "#/quiz";
     });
     hero.appendChild(cta);
+    hero.appendChild(el("p","hero-hint","あてはまる選択肢を選ぶだけ"));
     app.appendChild(hero);
-    if(getResult()){
+
+    /* 再訪者のみ: 前回の結果への導線（タイプ名つき・グラデ外のページ背景へ） */
+    var r = getResult();
+    if(r){
+      var top = findBiz(r.top);
       var againRow = el("div","again-row");
       var link = el("a","list-link",null);
       link.href = "#/result";
-      link.textContent = "前回の結果を見る →";
+      link.textContent = top ? ("前回の結果を見る: "+typeNameFor(top, getAnswers())+"タイプ →") : "前回の結果を見る →";
       againRow.appendChild(link);
       app.appendChild(againRow);
     }
-
-    var sec = el("section","section");
-    sec.appendChild(el("h2","h-sec","診断でわかる10種類のAI副業"));
-    sec.appendChild(el("p","muted","どれも在宅・すきま時間ではじめられるものだけを集めました。診断すると、あなたに合う順番で見られます。"));
-    var grid = el("div","biz-grid");
-    grid.style.marginTop = "12px";
-    businesses().forEach(function(b, i){
-      var c = el("button","biz-chip fade-up");
-      c.type = "button";
-      c.style.animationDelay = (i*0.04)+"s";
-      c.appendChild(el("span","biz-chip-name", b.name));
-      if(b.catch) c.appendChild(el("span","note", b.catch));
-      c.addEventListener("click", function(){ location.hash = "#/biz/"+b.id; });
-      grid.appendChild(c);
-    });
-    sec.appendChild(grid);
-    var toList = el("a","list-link",null);
-    toList.href = "#/list";
-    toList.textContent = "一覧ページでくわしく見る →";
-    sec.appendChild(toList);
-    app.appendChild(sec);
   }
 
   /* ---------- 診断（#/quiz） ---------- */
@@ -3230,7 +3268,7 @@ details.qa-item summary::-webkit-details-marker{display:none}
       return s;
     });
     wrap.appendChild(icons);
-    wrap.appendChild(el("p","ana-msg","あなたの回答を分析しています…"));
+    wrap.appendChild(el("p","ana-msg","あなたの回答を読み解いています…"));
     var skipBtn = el("button","btn-ghost ana-skip","スキップ →");
     skipBtn.type = "button";
     skipBtn.setAttribute("aria-label","分析をスキップして診断結果を見る");
@@ -3357,66 +3395,89 @@ details.qa-item summary::-webkit-details-marker{display:none}
       app.appendChild(echoSec);
     }
 
-    /* 理由文（最大3句合成）＋ ほぼ同率note */
-    var reasonSec = el("section","section card");
-    if(DATA.resultCopy && DATA.resultCopy.reasonIntro){
-      reasonSec.appendChild(el("p","label", DATA.resultCopy.reasonIntro));
-    }
-    reasonSec.appendChild(el("p","reason-text", reasonSentence(top, a)));
-    if(r.ranking.length>=2 && DATA.scoring && typeof DATA.scoring.closeMatchGapPct==="number"
-       && (r.ranking[0].pct - r.ranking[1].pct) <= DATA.scoring.closeMatchGapPct
-       && DATA.resultCopy && DATA.resultCopy.closeMatchNote){
-      reasonSec.appendChild(el("p","note close-note", DATA.resultCopy.closeMatchNote));
-    }
-    app.appendChild(reasonSec);
+    /* あなたに合うAI副業は、この3つ（MBTI風・3つ同格の提案／1位は最推し表示） */
+    var propSec = el("section","section");
+    propSec.appendChild(el("h2","h-sec","あなたに合うAI副業は、この3つ"));
+    var proposals = el("div","proposals");
 
-    /* 実践へCTA */
-    var ctaSec = el("section","section");
-    var cta = el("button","btn btn-primary btn-block","「"+top.name+"」を今日はじめる →");
-    cta.type = "button";
-    cta.addEventListener("click", function(){ location.hash = "#/biz/"+top.id; });
-    ctaSec.appendChild(cta);
-    app.appendChild(ctaSec);
+    /* 1位＝大カード（適性%・ティア・診断理由3句・はじめ方CTA） */
+    if(r.ranking[0]){
+      var one = findBiz(r.ranking[0].id);
+      if(one){
+        var big = el("div","propose-1");
+        big.appendChild(el("span","propose-badge","1位・いちばんおすすめ"));
+        big.appendChild(el("p","propose-name", one.name));
+        var meta1 = el("div","propose-meta");
+        meta1.appendChild(el("span","propose-pct","適性 "+r.ranking[0].pct+"%"));
+        var t1 = tierLabel(r.ranking[0].pct);
+        if(t1) meta1.appendChild(el("span","tier-badge", t1));
+        big.appendChild(meta1);
+        if(one.catch) big.appendChild(el("p","muted propose-catch", one.catch));
+        if(DATA.resultCopy && DATA.resultCopy.reasonIntro){
+          big.appendChild(el("p","label propose-reason-lead", DATA.resultCopy.reasonIntro));
+        }
+        big.appendChild(el("p","propose-reason", reasonSentence(one, a)));
+        var bigCta = el("button","btn btn-primary btn-block","「"+one.name+"」のはじめ方を見る →");
+        bigCta.type = "button";
+        bigCta.addEventListener("click", function(){ location.hash = "#/biz/"+one.id; });
+        big.appendChild(bigCta);
+        proposals.appendChild(big);
+      }
+    }
 
-    /* 次点の才能（2位・3位） */
+    /* 2位・3位＝中カード（適性%・キャッチ・はじめ方を見る） */
     if(r.ranking.length >= 2){
-      var runSec = el("section","section");
-      runSec.appendChild(el("h2","h-sec","次点の才能"));
-      var grid = el("div","runner-cards");
+      var rest = el("div","propose-rest");
       r.ranking.slice(1,3).forEach(function(x, i){
         var b = findBiz(x.id);
         if(!b) return;
-        var c = el("button","card runner-card");
+        var c = el("button","card propose-mid");
         c.type = "button";
-        c.appendChild(el("p","note",(i+2)+"位・適性 "+x.pct+"%"));
-        c.appendChild(el("p","label", b.name));
+        c.appendChild(el("p","propose-rank",(i+2)+"位・適性 "+x.pct+"%"));
+        c.appendChild(el("p","propose-name-sm", b.name));
         if(b.catch) c.appendChild(el("p","note", b.catch));
+        c.appendChild(el("span","mid-link","はじめ方を見る →"));
         c.addEventListener("click", function(){ location.hash = "#/biz/"+b.id; });
-        grid.appendChild(c);
+        rest.appendChild(c);
       });
-      runSec.appendChild(grid);
-      app.appendChild(runSec);
+      proposals.appendChild(rest);
     }
+    propSec.appendChild(proposals);
 
-    /* 全ランキング（折りたたみ） */
-    var allSec = el("section","section");
-    var det = el("details","rank-all");
-    det.appendChild(el("summary",null,"全"+r.ranking.length+"種類のランキングを見る"));
-    var lst = el("div","rank-list");
-    r.ranking.forEach(function(x, i){
-      var b = findBiz(x.id);
-      if(!b) return;
-      var rowBtn = el("button","rank-row");
-      rowBtn.type = "button";
-      rowBtn.appendChild(el("span","rank-no", String(i+1)));
-      rowBtn.appendChild(el("span","rank-name", b.name));
-      rowBtn.appendChild(el("span","bar-pct", x.pct+"%"));
-      rowBtn.addEventListener("click", function(){ location.hash = "#/biz/"+b.id; });
-      lst.appendChild(rowBtn);
-    });
-    det.appendChild(lst);
-    allSec.appendChild(det);
-    app.appendChild(allSec);
+    /* ほぼ同率のときの補足 */
+    if(r.ranking.length>=2 && DATA.scoring && typeof DATA.scoring.closeMatchGapPct==="number"
+       && (r.ranking[0].pct - r.ranking[1].pct) <= DATA.scoring.closeMatchGapPct
+       && DATA.resultCopy && DATA.resultCopy.closeMatchNote){
+      propSec.appendChild(el("p","note close-note", DATA.resultCopy.closeMatchNote));
+    }
+    app.appendChild(propSec);
+
+    /* 他の副業も見る（TOP3を除く4位以降・%バー付き折りたたみ） */
+    if(r.ranking.length > 3){
+      var moreSec = el("section","section");
+      var det = el("details","rank-all");
+      det.appendChild(el("summary",null,"他の"+(r.ranking.length-3)+"つの副業も見る ▾"));
+      var lst = el("div","rank-list");
+      r.ranking.slice(3).forEach(function(x, i){
+        var b = findBiz(x.id);
+        if(!b) return;
+        var rowBtn = el("button","rank-row");
+        rowBtn.type = "button";
+        rowBtn.appendChild(el("span","rank-no", String(i+4)));
+        rowBtn.appendChild(el("span","rank-name", b.name));
+        var track = el("span","rank-bar");
+        var rf = el("span","rank-bar-fill");
+        rf.style.width = Math.max(0, Math.min(100, x.pct))+"%";
+        track.appendChild(rf);
+        rowBtn.appendChild(track);
+        rowBtn.appendChild(el("span","bar-pct rank-pct", x.pct+"%"));
+        rowBtn.addEventListener("click", function(){ location.hash = "#/biz/"+b.id; });
+        lst.appendChild(rowBtn);
+      });
+      det.appendChild(lst);
+      moreSec.appendChild(det);
+      app.appendChild(moreSec);
+    }
 
     /* シェアコピー＋再診断 */
     var actSec = el("section","section btn-row");

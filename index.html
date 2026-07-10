@@ -2695,6 +2695,46 @@ main#app{max-width:var(--maxw);margin:0 auto;padding:var(--sp-4) var(--sp-4) var
 .fit-label{margin-top:var(--sp-3)}
 .fit-list{margin:var(--sp-2) 0 0 1.4em}
 .fit-list li{margin-top:2px}
+
+/* 全体像フロー図解（steps タイトルから自動生成。モバイル縦・520px以上で横フロー） */
+.flow{display:flex;flex-direction:column;gap:var(--sp-2)}
+.flow-step{display:flex;align-items:center;gap:var(--sp-3);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--sp-3)}
+.flow-num{flex:none;width:30px;height:30px;border-radius:var(--radius-full);background:var(--accent-soft);color:var(--accent-text);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.flow-label{font-size:13px;font-weight:700;line-height:1.5}
+.flow-arrow{align-self:center;color:var(--text-3);font-size:18px;line-height:1;transform:rotate(90deg)}
+@media(min-width:520px){
+  .flow{flex-direction:row;align-items:stretch}
+  .flow-step{flex:1;flex-direction:column;align-items:center;text-align:center;gap:var(--sp-2)}
+  .flow-arrow{transform:none;align-self:flex-start;margin-top:15px}
+  .flow-label{font-size:12.5px}
+}
+
+/* こんな人に向いています（✓チップ・2列／モバイル1列） */
+.fit-grid{display:grid;grid-template-columns:1fr;gap:var(--sp-2);margin-top:var(--sp-2)}
+@media(min-width:520px){.fit-grid{grid-template-columns:1fr 1fr}}
+.fit-chip{display:flex;align-items:flex-start;gap:var(--sp-2);background:var(--elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--sp-3)}
+.fit-chip .fit-check{color:var(--success);font-weight:800;flex:none}
+.fit-chip .fit-txt{font-size:13px;line-height:1.6}
+
+/* 診断理由（1句=1行・回答引用をチップ強調） */
+.biz-summary{line-height:1.9}
+.reason-list{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-1)}
+.reason-item{display:flex;align-items:flex-start;gap:var(--sp-2)}
+.reason-ic{flex:none}
+.reason-body{line-height:1.7}
+.ans-chip{display:inline-block;background:var(--accent-soft);color:var(--accent-text);font-weight:700;border-radius:var(--radius-sm);padding:1px 8px;margin-right:2px}
+
+/* ファクトカード: 高さ・密度をそろえてスキャンしやすく */
+.fact{display:flex;flex-direction:column;gap:6px}
+.fact .income-label{font-size:15px;font-weight:800;line-height:1.5}
+.src-toggle{align-self:flex-start;margin-top:auto;color:var(--accent-text);font-weight:700;font-size:12px;min-height:36px;display:inline-flex;align-items:center;gap:4px}
+.src-chev{transition:transform .2s ease}
+.src-toggle[aria-expanded="true"] .src-chev{transform:rotate(180deg)}
+.src-body{margin-top:6px}
+.need-list{display:flex;flex-direction:column;gap:var(--sp-2)}
+.need-item{display:flex;align-items:flex-start;gap:var(--sp-2)}
+.need-ic{flex:none}
+.need-txt{font-size:13px;line-height:1.6}
 .acc{border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);overflow:hidden}
 .acc+.acc{margin-top:var(--sp-3)}
 .acc-head-row{display:flex;align-items:center;gap:var(--sp-1);padding:0 var(--sp-2) 0 var(--sp-1)}
@@ -3020,6 +3060,54 @@ details.qa-item summary::-webkit-details-marker{display:none}
     var out = tpl;
     Object.keys(map).forEach(function(k){ out = out.split("{"+k+"}").join(map[k]); });
     return out;
+  }
+  /* 診断理由を「1句=1要素」の配列で返す（reasonSentence と同じ選定・接続詞なし。実践ページの行分解用） */
+  function reasonPhrases(biz, answers){
+    var items = [];
+    questions().forEach(function(q, qi){
+      var oid = answers && answers[q.id];
+      if(!oid) return;
+      var o = findOption(q, oid);
+      if(!o || !o.weights) return;
+      var w = o.weights[biz.id];
+      if(typeof w === "number" && w >= 2){
+        var r = biz.reasons && biz.reasons[q.id+":"+oid];
+        if(r) items.push({ w:w, qi:qi, text:r });
+      }
+    });
+    items.sort(function(a,b){ return (b.w - a.w) || (a.qi - b.qi); });
+    var picked = items.slice(0,3).map(function(x){ return x.text; });
+    if(!picked.length && biz.defaultReason) picked = [biz.defaultReason];
+    return picked;
+  }
+  /* 理由句の先頭「回答引用」をチップとして立てる（表示装飾のみ・textContentで安全に構築） */
+  function appendReasonBody(container, text){
+    var m = /^「([^」]+)」([\s\S]*)$/.exec(String(text || ""));
+    if(m){
+      container.appendChild(el("span","ans-chip", m[1]));
+      container.appendChild(document.createTextNode(m[2]));
+    } else {
+      container.appendChild(document.createTextNode(String(text || "")));
+    }
+  }
+  /* 「必要なもの」テキストから内容に合う絵文字を選ぶ（表示装飾のみ・該当なしは✓） */
+  function needIcon(t){
+    t = String(t || "");
+    var map = [
+      [/chatgpt|claude|gpt|\bai\b|ＡＩ|生成/i, "🤖"],
+      [/スマホ|携帯|カメラ|撮影|写真/, "📱"],
+      [/印刷|プリンタ|プリント/, "🖨"],
+      [/canva|デザイン|バナー/i, "🎨"],
+      [/メルカリ|フリマ|出品|販売|ストア|ショップ|etsy|booth/i, "🛒"],
+      [/zoom|通話|オンライン|ビデオ|会議/i, "🎥"],
+      [/note|ブログ|文章|ライティング|記事|執筆/i, "✍️"],
+      [/アカウント|登録|サイト|チケット/, "🔑"],
+      [/pc|パソコン|ネット環境|回線|端末/i, "💻"],
+      [/時間|平日|週末/, "⏰"],
+      [/お金|費用|資金|手数料|円/, "💰"]
+    ];
+    for(var i=0;i<map.length;i++){ if(map[i][0].test(t)) return map[i][1]; }
+    return "✓";
   }
   function starStr(n){
     n = Math.max(0, Math.min(5, n|0));
@@ -3620,19 +3708,52 @@ details.qa-item summary::-webkit-details-marker{display:none}
     if(b.catch) head.appendChild(el("p","muted", b.catch));
     app.appendChild(head);
 
-    /* ① 概要 */
+    /* 全体像フロー図解（steps タイトルから自動生成。まず流れを掴む） */
+    var stepsArr = Array.isArray(b.steps) ? b.steps : [];
+    if(stepsArr.length){
+      var flowSec = el("section","section");
+      flowSec.appendChild(el("h2","h-sec","この副業の全体像"));
+      var flow = el("div","flow");
+      stepsArr.forEach(function(s, i){
+        var st = el("div","flow-step");
+        st.appendChild(el("span","flow-num", String(i+1)));
+        st.appendChild(el("span","flow-label", s.title || ""));
+        flow.appendChild(st);
+        if(i < stepsArr.length-1){
+          var ar = el("span","flow-arrow","→");
+          ar.setAttribute("aria-hidden","true");
+          flow.appendChild(ar);
+        }
+      });
+      flowSec.appendChild(flow);
+      app.appendChild(flowSec);
+    }
+
+    /* ① どんな副業?（フロー図解の後・本文は行間ゆったりで圧迫感を減らす） */
     var sum = el("section","section card");
     sum.appendChild(el("h2","h-sec","どんな副業?"));
-    sum.appendChild(el("p",null, b.summary || ""));
-    if(Array.isArray(b.fit) && b.fit.length){
-      sum.appendChild(el("p","label fit-label","こんな人に向いています"));
-      var ul = el("ul","fit-list");
-      b.fit.forEach(function(f){ ul.appendChild(el("li",null,f)); });
-      sum.appendChild(ul);
-    }
+    sum.appendChild(el("p","biz-summary", b.summary || ""));
     app.appendChild(sum);
 
-    /* 診断◯%だった理由（結果がありTOP3のときのみ。直リンクでも成立） */
+    /* こんな人に向いています（✓チップ・2列グリッド） */
+    if(Array.isArray(b.fit) && b.fit.length){
+      var fitSec = el("section","section");
+      fitSec.appendChild(el("h2","h-sec","こんな人に向いています"));
+      var fg = el("div","fit-grid");
+      b.fit.forEach(function(f){
+        var chip = el("div","fit-chip");
+        var ck = el("span","fit-check","✓");
+        ck.setAttribute("aria-hidden","true");
+        chip.appendChild(ck);
+        chip.appendChild(el("span","fit-txt", f));
+        fg.appendChild(chip);
+      });
+      fitSec.appendChild(fg);
+      app.appendChild(fitSec);
+    }
+
+    /* 診断◯%だった理由（結果がありTOP3のときのみ。直リンクでも成立）
+       長い連結文をやめ、理由句1つ=1行に分解（回答引用をチップ強調・接続詞は使わない） */
     var r = getResult();
     if(r){
       var rankIdx = -1;
@@ -3641,27 +3762,63 @@ details.qa-item summary::-webkit-details-marker{display:none}
         var ans = getAnswers();
         var why = el("section","section card why-card");
         why.appendChild(el("h2","h-sec","診断で適性"+r.ranking[rankIdx].pct+"%（"+(rankIdx+1)+"位）だった理由"));
-        why.appendChild(el("p",null, reasonSentence(b, ans)));
+        var rlist = el("div","reason-list");
+        reasonPhrases(b, ans).forEach(function(pt){
+          var item = el("div","reason-item");
+          var ic = el("span","reason-ic","💡");
+          ic.setAttribute("aria-hidden","true");
+          item.appendChild(ic);
+          var body = el("span","reason-body");
+          appendReasonBody(body, pt);
+          item.appendChild(body);
+          rlist.appendChild(item);
+        });
+        why.appendChild(rlist);
         app.appendChild(why);
       }
     }
 
-    /* ② ファクト3枚 */
+    /* ② ファクト3枚（高さ・密度をそろえてスキャンしやすく） */
     var facts = el("section","section facts");
+
     var f1 = el("div","card fact");
     f1.appendChild(el("h3",null,"収益の目安"));
-    f1.appendChild(el("p","label", b.income ? b.income.label : ""));
-    if(b.income && b.income.note) f1.appendChild(el("p","note", b.income.note));
+    f1.appendChild(el("p","income-label", b.income ? b.income.label : ""));
+    if(b.income && b.income.note){
+      var srcBtn = el("button","src-toggle");
+      srcBtn.type = "button";
+      srcBtn.setAttribute("aria-expanded","false");
+      srcBtn.appendChild(el("span",null,"根拠・出典を見る"));
+      srcBtn.appendChild(el("span","src-chev","▾"));
+      var srcBody = el("p","note src-body", b.income.note);
+      srcBody.hidden = true;
+      srcBtn.addEventListener("click", function(){
+        var open = srcBtn.getAttribute("aria-expanded")==="true";
+        srcBtn.setAttribute("aria-expanded", open ? "false" : "true");
+        srcBody.hidden = open;
+      });
+      f1.appendChild(srcBtn);
+      f1.appendChild(srcBody);
+    }
     facts.appendChild(f1);
+
     var f2 = el("div","card fact");
     f2.appendChild(el("h3",null,"必要なもの"));
-    var nul = el("ul","fit-list");
-    (Array.isArray(b.needs) ? b.needs : []).forEach(function(n){ nul.appendChild(el("li",null,n)); });
-    f2.appendChild(nul);
+    var nlist = el("div","need-list");
+    (Array.isArray(b.needs) ? b.needs : []).forEach(function(n){
+      var it = el("div","need-item");
+      var ic2 = el("span","need-ic", needIcon(n));
+      ic2.setAttribute("aria-hidden","true");
+      it.appendChild(ic2);
+      it.appendChild(el("span","need-txt", n));
+      nlist.appendChild(it);
+    });
+    f2.appendChild(nlist);
     facts.appendChild(f2);
+
     var f3 = el("div","card fact");
     f3.appendChild(el("h3",null,"初収益までの目安"));
-    f3.appendChild(el("p","label", b.timeToStart || ""));
+    f3.appendChild(el("p","income-label", b.timeToStart || ""));
     var meta = el("p","note");
     var dStar = el("span","stars", starStr(b.difficulty));
     dStar.setAttribute("role","img");
